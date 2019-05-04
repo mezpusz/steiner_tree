@@ -1,10 +1,22 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
+struct edge {
+    edge(size_t w) : weight(w), capacity(w) {}
+    size_t weight;
+    size_t capacity;
+};
+
+struct node {
+    std::unordered_map<size_t, edge> edges;
+    std::unordered_set<size_t> redges;
+    std::unordered_set<size_t> saturated; // only backward edges 
+};
+
 struct instance {
-    size_t nodes;
-    std::map<std::pair<size_t, size_t>, size_t> edges;
-    std::vector<size_t> terminals;
+    std::vector<node> nodes;
+    std::unordered_set<size_t> terminals;
 };
