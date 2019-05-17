@@ -24,7 +24,7 @@ bool bfs(size_t t,
         instance& ins,
         const std::unordered_set<size_t>& actives_set,
         std::set<std::pair<size_t, size_t>>& list) {
-    std::cout << "Checking " << t << std::endl;
+    // std::cout << "Checking " << t << std::endl;
 
     std::deque<size_t> q;
     q.push_back(t);
@@ -38,7 +38,7 @@ bool bfs(size_t t,
         // traverse saturated nodes
         for (const auto& a : ins.nodes[x].saturated) {
             if (actives_set.count(a) > 0) {
-                std::cout << "Another active terminal was hit: " << a << std::endl;
+                // std::cout << "Another active terminal was hit: " << a << std::endl;
                 ins.terminals.at(t).component = a;
                 return false;
             }
@@ -54,12 +54,12 @@ bool bfs(size_t t,
             }
         }
     }
-    std::cout << "List contains" << std::endl;
+    // std::cout << "List contains" << std::endl;
     for (auto it = list.begin(); it != list.end();) {
         if (cut.count(it->first) > 0) {
             it = list.erase(it);
         } else {
-            std::cout << it->first << " " << it->second << std::endl;
+            // std::cout << it->first << " " << it->second << std::endl;
             it++;
         }
     }
@@ -81,13 +81,13 @@ bool pick_minimal_edge(instance& ins, std::set<std::pair<size_t, size_t>> edges)
             }
         }
     }
-    std::cout << "Minimal capacity is " << min << std::endl;
+    // std::cout << "Minimal capacity is " << min << std::endl;
     for (const auto& e : edges) {
         auto edge = ins.nodes[e.first].edges.find(e.second);
         if (edge != ins.nodes[e.first].edges.end()) {
             assert(min <= edge->second.capacity);
             if (edge->second.capacity == min) {
-                std::cout << e.first << " " << e.second << " became saturated" << std::endl;
+                // std::cout << e.first << " " << e.second << " became saturated" << std::endl;
                 ins.nodes[e.second].saturated.insert(e.first);
             }
             edge->second.capacity -= min;
@@ -101,6 +101,7 @@ void find_min_route(instance& ins) {
 }
 
 void print_min_tree (instance& ins) {
+    std::stringstream str;
     for (auto it = ins.terminals.begin(); it != ins.terminals.end(); it++) {
         auto comp = it->second.component;
         if (comp == it->first) {
@@ -112,12 +113,13 @@ void print_min_tree (instance& ins) {
             auto term = ins.terminals;
             term.erase(root);
             size_t sum = 0;
+            str << std::endl;
             while (!q.empty()) {
                 auto x = q.front();
                 q.pop_front();
                 for (const auto& [a, e] : ins.nodes[x].edges) {
                     if (e.capacity == 0 && seen.count(a) == 0) {
-                        std::cout << x << "->" << a << std::endl;
+                        str << x << "->" << a << ",";
                         sum += e.weight;
                         seen.insert(a);
                         term.erase(a);
@@ -125,10 +127,13 @@ void print_min_tree (instance& ins) {
                     }
                 }
             }
-            std::cout << std::endl;
             if (term.empty()) {
-                std::cout << "Sum is " << sum << std::endl;
+                std::cout << "Steiner tree weight sum is " << sum << std::endl;
+                std::cout << "Tree edges are:" << str.str() << std::endl;
                 break;
+            } else {
+                std::cout << "Found root of Steiner tree which does not contain "
+                          << "all terminals. Probably no solution found" << std::endl;
             }
         }
     }
@@ -158,16 +163,16 @@ int dual_ascent(instance& ins) {
             auto scoreMin = ins.terminals.at(actives.top()).score;
             auto scoreCurr = ins.terminals.at(t).score;
             if (scoreMin < scoreCurr) {
-                std::cout << t << " was not selected "
-                          << scoreMin << " (of " << actives.top()
-                           << ") < " << scoreCurr << std::endl;
+                // std::cout << t << " was not selected "
+                //           << scoreMin << " (of " << actives.top()
+                //            << ") < " << scoreCurr << std::endl;
             } else {
-                std::cout << t << " is selected" << std::endl;
+                // std::cout << t << " is selected" << std::endl;
                 pick_minimal_edge(ins, list);
             }
             actives.push(t);
         }
-        std::cout << std::endl;
+        // std::cout << std::endl;
     }
     print_min_tree(ins);
     return 0;
@@ -175,13 +180,17 @@ int dual_ascent(instance& ins) {
 
 int main(int argc, char* argv[]) {
     std::string infile_str, outfile_str;
-    infile_str = "B/b01.stp";
+    if (argc >= 2) {
+        infile_str = argv[1];
+    } else {
+        infile_str = "B/b04.stp";
+    }
     outfile_str = "output.txt";
     auto instance = parse(infile_str);
     std::stringstream rootstr;
     std::cout << "Found " << instance.nodes.size() << " nodes and "
               << instance.terminals.size()
-              << " terminals in input file" << std::endl;
+              << " terminals in input file" << std::endl << std::endl;
 
     dual_ascent(instance);
     std::ofstream out(outfile_str);
