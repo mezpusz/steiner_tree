@@ -16,24 +16,20 @@ instance parse(const std::string& filename) {
             size_t nodes_count;
             is >> nodes_count;
             ins.nodes.resize(nodes_count+1); // node ids start from 1
-        } else if (first == "E") {
+        } else if (first == "A") {
             size_t u, v, weight;
             is >> u >> v >> weight;
             ins.nodes[u].edges.insert(std::make_pair(v, edge(weight)));
             ins.nodes[v].redges.insert(u);
+        } else if (first == "E") {
+            size_t u, v, weight;
+            is >> u >> v >> weight;
+            ins.nodes[u].edges.insert(std::make_pair(v, edge(weight)));
+            ins.nodes[v].edges.insert(std::make_pair(u, edge(weight)));
+            ins.nodes[u].redges.insert(v);
+            ins.nodes[v].redges.insert(u);
         }
     }
-    // for (int i = 1; i < ins.nodes.size(); i++) {
-    //     std::cout << "node " << i << std::endl;
-    //     std::cout << "edges" << std::endl;
-    //     for (const auto& e : ins.nodes[i].edges) {
-    //         std::cout << i << " " << e.first << std::endl;
-    //     }
-    //     std::cout << "redges" << std::endl;
-    //     for (const auto& e : ins.nodes[i].redges) {
-    //         std::cout << e.first << " " << i << std::endl;
-    //     }
-    // }
     // parse terminals
     for (const auto& line : sections["Terminals"]) {
         std::istringstream is(line);
@@ -42,7 +38,8 @@ instance parse(const std::string& filename) {
         if (first == "T") {
             size_t u;
             is >> u;
-            ins.terminals.insert(u);
+            terminal t(u, ins.nodes[u].redges.size());
+            ins.terminals.insert(std::make_pair(u, t));
         }
     }
     return ins;
