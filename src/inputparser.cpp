@@ -3,16 +3,24 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
+
+void to_upper(std::string& str) {
+    std::transform(str.begin(), str.end(), str.begin(),
+    [](unsigned char c) {
+        return std::toupper(c);
+    });
+}
 
 instance parse(const std::string& filename) {
     auto sections = get_sections(filename);
     instance ins;
     // parse graph
-    for (const auto& line : sections["Graph"]) {
+    for (const auto& line : sections["GRAPH"]) {
         std::istringstream is(line);
         std::string first;
         is >> first;
-        if (first == "Nodes") {
+        if (first == "NODES") {
             size_t nodes_count;
             is >> nodes_count;
             ins.nodes.resize(nodes_count+1); // node ids start from 1
@@ -31,7 +39,7 @@ instance parse(const std::string& filename) {
         }
     }
     // parse terminals
-    for (const auto& line : sections["Terminals"]) {
+    for (const auto& line : sections["TERMINALS"]) {
         std::istringstream is(line);
         std::string first;
         is >> first;
@@ -61,6 +69,7 @@ std::map<std::string, std::vector<std::string>> get_sections(const std::string& 
         if (line.empty() || line[0] == '#') {
             continue;
         }
+        to_upper(line);
         if (section) {
             if (line.find("END") == 0) {
                 section = false;
