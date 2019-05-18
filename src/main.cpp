@@ -1,5 +1,6 @@
 
 #include "inputparser.h"
+#include "solutionfinder.h"
 
 #include <deque>
 #include <iostream>
@@ -8,6 +9,7 @@
 #include <set>
 #include <cassert>
 #include <queue>
+#include <memory>
 
 class score_compare {
     instance& ins;
@@ -100,45 +102,6 @@ void find_min_route(instance& ins) {
 
 }
 
-void print_min_tree (instance& ins) {
-    std::stringstream str;
-    for (auto it = ins.terminals.begin(); it != ins.terminals.end(); it++) {
-        auto comp = it->second.component;
-        if (comp == it->first) {
-            size_t root = comp;
-            std::deque<size_t> q;
-            std::unordered_set<size_t> seen;
-            seen.insert(root);
-            q.push_back(root);
-            auto term = ins.terminals;
-            term.erase(root);
-            size_t sum = 0;
-            str << std::endl;
-            while (!q.empty()) {
-                auto x = q.front();
-                q.pop_front();
-                for (const auto& [a, e] : ins.nodes[x].edges) {
-                    if (e.capacity == 0 && seen.count(a) == 0) {
-                        str << x << "->" << a << ",";
-                        sum += e.weight;
-                        seen.insert(a);
-                        term.erase(a);
-                        q.push_back(a);
-                    }
-                }
-            }
-            if (term.empty()) {
-                std::cout << "Steiner tree weight sum is " << sum << std::endl;
-                std::cout << "Tree edges are:" << str.str() << std::endl;
-                break;
-            } else {
-                std::cout << "Found root of Steiner tree which does not contain "
-                          << "all terminals. Probably no solution found" << std::endl;
-            }
-        }
-    }
-}
-
 int dual_ascent(instance& ins) {
     min_score_queue actives(ins);
     std::unordered_set<size_t> actives_set;
@@ -174,7 +137,6 @@ int dual_ascent(instance& ins) {
         }
         // std::cout << std::endl;
     }
-    print_min_tree(ins);
     return 0;
 }
 
@@ -193,6 +155,15 @@ int main(int argc, char* argv[]) {
               << " terminals in input file" << std::endl << std::endl;
 
     dual_ascent(instance);
+    auto sf_bfs = std::make_unique<solutionfinder_bfs>(instance);
+    sf_bfs->find();
+    std::cout << "Bfs found solution with sum " << sf_bfs->get_min() << std::endl;
+    auto sf_dfs = std::make_unique<solutionfinder_dfs>(instance);
+    sf_dfs->find();
+    std::cout << "Dfs found solution with sum " << sf_dfs->get_min() << std::endl;
+    auto sf_dijkstra = std::make_unique<solutionfinder_dijkstra>(instance);
+    sf_dijkstra->find();
+    std::cout << "Dijkstra found solution with sum " << sf_dijkstra->get_min() << std::endl;
     std::ofstream out(outfile_str);
     if (out.is_open()) {
         out.close();
