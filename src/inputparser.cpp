@@ -28,14 +28,14 @@ instance parse(const std::string& filename) {
             size_t u, v, weight;
             is >> u >> v >> weight;
             ins.nodes[u].edges.insert(std::make_pair(v, edge(weight)));
-            ins.nodes[v].redges.insert(u);
+            ins.nodes[v].redges.insert(std::make_pair(u, false));
         } else if (first == "E") {
             size_t u, v, weight;
             is >> u >> v >> weight;
             ins.nodes[u].edges.insert(std::make_pair(v, edge(weight)));
             ins.nodes[v].edges.insert(std::make_pair(u, edge(weight)));
-            ins.nodes[u].redges.insert(v);
-            ins.nodes[v].redges.insert(u);
+            ins.nodes[u].redges.insert(std::make_pair(v, false));
+            ins.nodes[v].redges.insert(std::make_pair(u, false));
         }
     }
     // parse terminals

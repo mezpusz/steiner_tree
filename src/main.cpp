@@ -38,20 +38,18 @@ bool bfs(size_t t,
         q.pop_front();
 
         // traverse saturated nodes
-        for (const auto& a : ins.nodes[x].saturated) {
-            if (actives_set.count(a) > 0) {
-                // std::cout << "Another active terminal was hit: " << a << std::endl;
-                ins.terminals.at(t).component = a;
-                return false;
-            }
-            if (cut.count(a) == 0) {
-                cut.insert(a);
-                q.push_back(a);
-            }
-        }
-        // collect potential steiner cut nodes
-        for (const auto& a : ins.nodes[x].redges) {
-            if (cut.count(a) == 0) {
+        for (const auto& [a, sat] : ins.nodes[x].redges) {
+            if (sat) {
+                if (actives_set.count(a) > 0) {
+                    // std::cout << "Another active terminal was hit: " << a << std::endl;
+                    return false;
+                }
+                if (cut.count(a) == 0) {
+                    cut.insert(a);
+                    q.push_back(a);
+                }
+            // collect potential steiner cut nodes
+            } else if (cut.count(a) == 0) {
                 list.insert(std::make_pair(a, x));
             }
         }
@@ -90,7 +88,7 @@ bool pick_minimal_edge(instance& ins, std::set<std::pair<size_t, size_t>> edges)
             assert(min <= edge->second.capacity);
             if (edge->second.capacity == min) {
                 // std::cout << e.first << " " << e.second << " became saturated" << std::endl;
-                ins.nodes[e.second].saturated.insert(e.first);
+                ins.nodes[e.second].redges[e.first] = true;
             }
             edge->second.capacity -= min;
         }
@@ -109,7 +107,6 @@ int dual_ascent(instance& ins) {
         actives.push(t.first);
         actives_set.insert(t.first);
     }
-    std::vector<std::pair<size_t, size_t>> saturated;
 
     while (!actives.empty()) {
         size_t t = actives.top();
@@ -117,7 +114,7 @@ int dual_ascent(instance& ins) {
         actives_set.erase(t);
         std::set<std::pair<size_t, size_t>> list;
         if (bfs(t, ins, actives_set, list)) {
-            // there's no use in actives with no outgoing edges,
+            // there's no use in actives with no steiner cut,
             // remove them
             while (ins.terminals.at(actives.top()).score == 0) {
                 actives_set.erase(actives.top());
