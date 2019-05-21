@@ -147,20 +147,21 @@ int main(int argc, char* argv[]) {
     outfile_str = "output.txt";
     auto instance = parse(infile_str);
     std::stringstream rootstr;
-    std::cout << "Found " << instance.nodes.size() << " nodes and "
+    std::cout << "Input file " << infile_str << " with "
+              << instance.nodes.size() << " nodes and "
               << instance.terminals.size()
-              << " terminals in input file" << std::endl << std::endl;
+              << " terminals" << std::endl;
 
     dual_ascent(instance);
     auto sf_bfs = std::make_unique<solutionfinder_bfs>(instance);
     sf_bfs->find();
-    std::cout << "Bfs found solution with sum " << sf_bfs->get_min() << std::endl;
     auto sf_dfs = std::make_unique<solutionfinder_dfs>(instance);
     sf_dfs->find();
-    std::cout << "Dfs found solution with sum " << sf_dfs->get_min() << std::endl;
     auto sf_dijkstra = std::make_unique<solutionfinder_dijkstra>(instance);
     sf_dijkstra->find();
-    std::cout << "Dijkstra found solution with sum " << sf_dijkstra->get_min() << std::endl;
+    std::cout << "Found solution with sum " << sf_bfs->get_min() << " (bfs), "
+              << sf_dfs->get_min() << " (dfs), "
+              << sf_dijkstra->get_min() << " (dijkstra)" << std::endl;
     std::ofstream out(outfile_str);
     if (out.is_open()) {
         out.close();
