@@ -7,10 +7,11 @@
 #include <fstream>
 #include <sstream>
 #include <set>
-#include <cassert>
 #include <queue>
 #include <memory>
 
+// Custom compare for scores
+// Used by min_score_queue
 class score_compare {
     instance& ins;
 public:
@@ -26,11 +27,13 @@ bool find_steiner_cut(
         size_t t,
         instance& ins,
         const std::unordered_set<size_t>& actives_set,
-        std::set<std::pair<size_t, size_t>>& list) {
-    // std::cout << "Checking " << t << std::endl;
+        std::set<std::pair<size_t, size_t>>& steiner_cut) {
 
+    // Use double-ended queue for bfs
     std::deque<size_t> q;
     q.push_back(t);
+    // Cut containing all nodes from which
+    // t can be reached to saturated edges
     std::set<size_t> cut;
     cut.insert(t);
 
@@ -41,39 +44,42 @@ bool find_steiner_cut(
         for (const auto& [a, sat] : ins.nodes[x].redges) {
             // traverse saturated nodes
             if (sat) {
+                // we reached another active terminal
                 if (actives_set.count(a) > 0) {
-                    // std::cout << "Another active terminal was hit: " << a << std::endl;
                     return false;
                 }
+                // put node into cut and traverse it
                 if (cut.count(a) == 0) {
                     cut.insert(a);
                     q.push_back(a);
                 }
             // collect potential steiner cut nodes
+            // through non-saturated edges
             } else if (cut.count(a) == 0) {
-                list.insert(std::make_pair(a, x));
+                steiner_cut.insert(std::make_pair(a, x));
             }
         }
     }
-    // std::cout << "List contains" << std::endl;
-    for (auto it = list.begin(); it != list.end();) {
+    // There can be nodes which appeared
+    // first though non-saturated edges but later
+    // turned out to be saturated, delete them
+    for (auto it = steiner_cut.begin(); it != steiner_cut.end();) {
         if (cut.count(it->first) > 0) {
-            it = list.erase(it);
+            it = steiner_cut.erase(it);
         } else {
-            // std::cout << it->first << " " << it->second << std::endl;
             it++;
         }
     }
-    ins.terminals.at(t).score = list.size();
-    return list.size() > 0;
+    // Steiner cut size is our score
+    ins.terminals.at(t).score = steiner_cut.size();
+    return steiner_cut.size() > 0;
 }
 
-bool pick_minimal_edge(instance& ins, std::set<std::pair<size_t, size_t>> edges) {
-    if (edges.empty()) {
-        return false;
-    }
+// Pick edge with minimal capacity from steiner cut
+// and reduce all edges with that capacity
+void pick_minimal_edge(instance& ins, std::set<std::pair<size_t, size_t>> steiner_cut) {
     size_t min = SIZE_MAX;
-    for (const auto& e : edges) {
+    for (const auto& e : steiner_cut) {
         auto edge = ins.nodes[e.first].edges.find(e.second);
         if (edge != ins.nodes[e.first].edges.end()) {
             auto cap = edge->second.capacity;
@@ -82,19 +88,16 @@ bool pick_minimal_edge(instance& ins, std::set<std::pair<size_t, size_t>> edges)
             }
         }
     }
-    // std::cout << "Minimal capacity is " << min << std::endl;
-    for (const auto& e : edges) {
+    for (const auto& e : steiner_cut) {
         auto edge = ins.nodes[e.first].edges.find(e.second);
         if (edge != ins.nodes[e.first].edges.end()) {
-            assert(min <= edge->second.capacity);
             if (edge->second.capacity == min) {
-                // std::cout << e.first << " " << e.second << " became saturated" << std::endl;
+                // Mark saturated backward edges
                 ins.nodes[e.second].redges[e.first] = true;
             }
             edge->second.capacity -= min;
         }
     }
-    return true;
 }
 
 void find_min_route(instance& ins) {
@@ -102,6 +105,9 @@ void find_min_route(instance& ins) {
 }
 
 void dual_ascent(instance& ins) {
+    // Store a queue for nodes to process
+    // and a set to check whether they are
+    // still active
     min_score_queue actives(ins);
     std::unordered_set<size_t> actives_set;
     for (const auto& t : ins.terminals) {
@@ -115,20 +121,22 @@ void dual_ascent(instance& ins) {
         actives_set.erase(t);
         std::set<std::pair<size_t, size_t>> steiner_cut;
         if (find_steiner_cut(t, ins, actives_set, steiner_cut)) {
-            // there's no use in actives with no steiner cut,
-            // remove them
+            // There's no use in actives with
+            // no steiner cut, remove them
             while (ins.terminals.at(actives.top()).score == 0) {
                 actives_set.erase(actives.top());
                 actives.pop();
             }
+            // Check whether this terminal
+            // has still the minimal score
             auto scoreMin = ins.terminals.at(actives.top()).score;
             auto scoreCurr = ins.terminals.at(t).score;
             if (scoreCurr <= scoreMin) {
                 pick_minimal_edge(ins, steiner_cut);
             }
             actives.push(t);
+            actives_set.insert(t);
         }
-        // std::cout << std::endl;
     }
 }
 
@@ -137,10 +145,14 @@ int main(int argc, char* argv[]) {
     if (argc >= 2) {
         infile_str = argv[1];
     } else {
-        infile_str = "B/b04.stp";
+        infile_str = "B/b01.stp";
     }
     outfile_str = infile_str + ".out";
     auto instance = parse(infile_str);
+    if (instance.nodes.empty() || instance.terminals.empty()) {
+        std::cout << "Input file did not contain nodes or terminals." << std::endl;
+        return -1;
+    }
     std::stringstream rootstr;
     std::cout << "Input file " << infile_str << " with "
               // node ids start from 1
@@ -164,6 +176,7 @@ int main(int argc, char* argv[]) {
             out << u << " " << v << std::endl;
         }
     } else {
+        std::cout << "Cannot open output file " << outfile_str << std::endl;
         return -1;
     }
 

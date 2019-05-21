@@ -46,6 +46,7 @@ instance parse(const std::string& filename) {
         if (first == "T") {
             size_t u;
             is >> u;
+            // initial score is number of incoming edges
             terminal t(ins.nodes[u].redges.size());
             ins.terminals.insert(std::make_pair(u, t));
         }
@@ -53,6 +54,7 @@ instance parse(const std::string& filename) {
     return ins;
 }
 
+// Parse sections from file
 std::map<std::string, std::vector<std::string>> get_sections(const std::string& filename) {
     std::ifstream in(filename);
     std::map<std::string, std::vector<std::string>> res;

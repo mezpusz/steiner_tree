@@ -5,6 +5,10 @@
 #include <map>
 #include <vector>
 
+// Abstract base class for different solution finder
+// implementations. The idea is to traverse the saturated
+// nodes from each of the terminals (assuming the root is
+// not given/known) to see which one gives a minimal solution.
 class solutionfinder {
 public:
     solutionfinder(instance& ins);
@@ -24,6 +28,11 @@ protected:
     std::vector<std::pair<size_t, size_t>> min_edges;
 };
 
+// Finds a feasible solution by searching through
+// the saturated graph breadth-first.
+// Does not always give the best solution as we don't
+// consider the weights thus there can be cheaper paths
+// to each node.
 class solutionfinder_bfs : public solutionfinder
 {
 public:
@@ -33,6 +42,11 @@ protected:
     void find_from_root(size_t root) override;
 };
 
+// Finds a feasible solution by searching through
+// the saturated graph depth-first.
+// Does not always give the best solution as we don't
+// consider the weights thus there can be cheaper paths
+// to each node.
 class solutionfinder_dfs : public solutionfinder
 {
 public:
@@ -45,6 +59,10 @@ private:
         std::vector<std::pair<size_t,size_t>>& edges);
 };
 
+// Finds a feasible solution by giving shortest paths
+// from the root to all nodes with Dijkstra's algorithm.
+// Gives the minimal solution with respect to the approximated
+// saturated graph.
 class solutionfinder_dijkstra : public solutionfinder
 {
 public:
