@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
     } else {
         infile_str = "B/b04.stp";
     }
-    outfile_str = "output.txt";
+    outfile_str = infile_str + ".out";
     auto instance = parse(infile_str);
     std::stringstream rootstr;
     std::cout << "Input file " << infile_str << " with "
@@ -164,7 +164,9 @@ int main(int argc, char* argv[]) {
               << sf_dijkstra->get_min() << " (dijkstra)" << std::endl;
     std::ofstream out(outfile_str);
     if (out.is_open()) {
-        out.close();
+        for (const auto [u,v] : sf_dijkstra->get_edges()) {
+            out << u << " " << v << std::endl;
+        }
     } else {
         return -1;
     }
