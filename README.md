@@ -1,4 +1,4 @@
-Dual-ascent 2-approximation algorithm implementation for the (Steiner Tree Problem)[https://en.wikipedia.org/wiki/Steiner_tree_problem]. The implementation is based on papers of (Wong)[https://link.springer.com/article/10.1007/BF02612335] and (Pajor et al)[https://link.springer.com/article/10.1007/s12532-017-0123-4]. The problem description, input format and examples can be found at the (SteinLib Testdata Library)[http://steinlib.zib.de/steinlib.php].
+Dual-ascent 2-approximation algorithm implementation for the [Steiner Tree Problem](https://en.wikipedia.org/wiki/Steiner_tree_problem). The implementation is based on papers of [Wong](https://link.springer.com/article/10.1007/BF02612335) and [Pajor et al](https://link.springer.com/article/10.1007/s12532-017-0123-4). The problem description, input format and examples can be found at the [SteinLib Testdata Library](http://steinlib.zib.de/steinlib.php).
 
 ## Requirements for Unix
 
@@ -33,4 +33,4 @@ The only argument is an input file path which is required. The output file is wr
 
 ## Input format
 
-See (SteinLib format description)[http://steinlib.zib.de/format.php].
+See [SteinLib format description](http://steinlib.zib.de/format.php).
