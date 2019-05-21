@@ -8,5 +8,3 @@ add_executable(steiner inputparser.cpp
                        solutionfinder.h
                     )
 include_directories("${PROJECT_SOURCE_DIR}")
-#find_package(Threads)
-#target_link_libraries(steiner ${CMAKE_THREAD_LIBS_INIT})
