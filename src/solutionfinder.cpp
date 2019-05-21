@@ -11,11 +11,8 @@ solutionfinder::solutionfinder(instance& ins)
 }
 
 void solutionfinder::find() {
-    for (auto it = ins.terminals.begin(); it != ins.terminals.end(); it++) {
-        auto comp = it->second.component;
-        if (comp == it->first) {
-            find_from_root(comp);
-        }
+    for (const auto& [u, t] : ins.terminals) {
+        find_from_root(u);
     }
 }
 

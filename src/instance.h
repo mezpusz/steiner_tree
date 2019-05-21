@@ -16,9 +16,8 @@ struct node {
 };
 
 struct terminal {
-    terminal(size_t c, size_t s)
-        : component(c), score(s) {}
-    size_t component;
+    terminal(size_t s)
+        : score(s) {}
     size_t score;
 };
 

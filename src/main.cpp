@@ -22,7 +22,8 @@ public:
 
 using min_score_queue = std::priority_queue<size_t, std::vector<size_t>, score_compare>;
 
-bool bfs(size_t t,
+bool find_steiner_cut(
+        size_t t,
         instance& ins,
         const std::unordered_set<size_t>& actives_set,
         std::set<std::pair<size_t, size_t>>& list) {
@@ -37,8 +38,8 @@ bool bfs(size_t t,
         auto x = q.front();
         q.pop_front();
 
-        // traverse saturated nodes
         for (const auto& [a, sat] : ins.nodes[x].redges) {
+            // traverse saturated nodes
             if (sat) {
                 if (actives_set.count(a) > 0) {
                     // std::cout << "Another active terminal was hit: " << a << std::endl;
@@ -100,7 +101,7 @@ void find_min_route(instance& ins) {
 
 }
 
-int dual_ascent(instance& ins) {
+void dual_ascent(instance& ins) {
     min_score_queue actives(ins);
     std::unordered_set<size_t> actives_set;
     for (const auto& t : ins.terminals) {
@@ -112,8 +113,8 @@ int dual_ascent(instance& ins) {
         size_t t = actives.top();
         actives.pop();
         actives_set.erase(t);
-        std::set<std::pair<size_t, size_t>> list;
-        if (bfs(t, ins, actives_set, list)) {
+        std::set<std::pair<size_t, size_t>> steiner_cut;
+        if (find_steiner_cut(t, ins, actives_set, steiner_cut)) {
             // there's no use in actives with no steiner cut,
             // remove them
             while (ins.terminals.at(actives.top()).score == 0) {
@@ -122,19 +123,13 @@ int dual_ascent(instance& ins) {
             }
             auto scoreMin = ins.terminals.at(actives.top()).score;
             auto scoreCurr = ins.terminals.at(t).score;
-            if (scoreMin < scoreCurr) {
-                // std::cout << t << " was not selected "
-                //           << scoreMin << " (of " << actives.top()
-                //            << ") < " << scoreCurr << std::endl;
-            } else {
-                // std::cout << t << " is selected" << std::endl;
-                pick_minimal_edge(ins, list);
+            if (scoreCurr <= scoreMin) {
+                pick_minimal_edge(ins, steiner_cut);
             }
             actives.push(t);
         }
         // std::cout << std::endl;
     }
-    return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -148,7 +143,8 @@ int main(int argc, char* argv[]) {
     auto instance = parse(infile_str);
     std::stringstream rootstr;
     std::cout << "Input file " << infile_str << " with "
-              << instance.nodes.size() << " nodes and "
+              // node ids start from 1
+              << (instance.nodes.size()-1) << " nodes and "
               << instance.terminals.size()
               << " terminals" << std::endl;
 

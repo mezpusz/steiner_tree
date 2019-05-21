@@ -46,7 +46,7 @@ instance parse(const std::string& filename) {
         if (first == "T") {
             size_t u;
             is >> u;
-            terminal t(u, ins.nodes[u].redges.size());
+            terminal t(ins.nodes[u].redges.size());
             ins.terminals.insert(std::make_pair(u, t));
         }
     }
